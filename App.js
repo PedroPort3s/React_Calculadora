@@ -1,127 +1,165 @@
 import { StatusBar } from 'expo-status-bar';
-import React from 'react';
-import { StyleSheet, Text, View, Pressable } from 'react-native';
+import React, {useState} from 'react';
+import { StyleSheet, Text, View, Pressable, Alert, TextInput } from 'react-native';
 
-export default function App() {
-  const [num1,setNum1] = useState(0);
-  const [num2,setNum2] = useState(0);
-
-  const [operador,setOperador] = useState(null);  
-  const [operacao,setOperacao] = useState(null);
+export default function App() {  
+  const [operacao,setOperacao] = useState('');
+  const [operacaoRealizada,setOperacaoRealizada] = useState(false);
+  const [resultado,setResultado] = useState(0);
 
   const operadores = ['/','*','-','+'];
+  const numeros = [0,1,2,3,4,5,6,7,8,9];
 
-  function numerico(c) { 
-    return /\d/.test(c); 
+  function clearOperation(){       
+    setResultado(0);
+    setOperacaoRealizada(false);
+    setOperacao([...'']);
+    console.log('limpou ' + operacao)
   }
 
-  function clearOperation(){
-    setNum1(0);
-    setNum1(1);
-    setOperacao(null);
+  function ehNumero(str){
+    return /^\d+$/.test(str);
   }
 
-  function mountOperation(num){
+  function mountOperation(char){
 
-    if(numerico(num)){
-
+    if(operacaoRealizada){
+      let resultadoAnterior = resultado;
+      clearOperation();
+      console.log('segunda vez resultado ' + resultadoAnterior);
+      console.log('segunda vez ' + char);
+      setOperation(resultadoAnterior);
     }
-    else if (num == ','){
 
-    }    
-  }
-
-  function setNumber(num){
-    
-    if(operacao.includes(operador)){//contém um operador
-      setNum2(`{num2}` + num);
+    if (ehNumero(char)){
+      setOperation(char);
     }
-    else{
-      setNum1(`{num1}` + num);
+    else if (char == ','){ 
+      setOperation(char);  
+    }
+    else if (!operadores.some(o=>operacao.includes(o))){ // SOMENTE SE A OPERAÇÃO NÃO CONTER OPERADOR            
+      setOperation(char);
     }
   }
 
+  function setOperation(char){
+    let opera = operacao;
+
+    opera += char;
+
+    setOperacao(`${opera}`);
+  }
+
+  const regexGlobalPonto = /\./g;
+  const regexGlobalVirgula = /,/g;
 
   function execute(){
-    
-  }
 
+    try {
+
+      if(operacao == '' || operacao == undefined){
+        throw new Error('Não há uma operação a ser realizada');
+      }
+
+      let opera = operacao;
+
+      opera = opera.replace(regexGlobalVirgula,'.');
+
+      let op = null;
+
+      for (let index = 0; index < operadores.length; index++) {
+        op = operadores[index];
+
+        if (opera.includes(op)) {
+          break;
+        }
+        else{
+          op = null;
+        }
+      }
+
+      if (op == null) {        
+        throw new Error('Informe a operação a ser feita.');
+      }
+
+      let numerosOperacao = opera.split(op);
+
+      let num1 = parseFloat(numerosOperacao[0].trim());
+      let num2 = parseFloat(numerosOperacao[1].trim());
+
+      let operacaoFormatada = `${num1} ${op} ${num2}`;
+
+      let resultado = eval(operacaoFormatada);
+
+      operacaoFormatada += ` = ${resultado}`;
+
+      setResultado(resultado);
+      setOperacao(operacaoFormatada.replace(regexGlobalPonto,','));
+
+      setOperacaoRealizada(true);
+    }
+    catch(ex){
+      clearOperation();
+      Alert.alert('Atenção', ex.message);
+    }
+  }
+  
   return (
     <View style={styles.container}>
-       <TextInput showSoftInputOnFocus={false} label="Calculadora" ref={input => { this.textNum1 = input }} style={styles.input}/>       
 
+       <Text style={styles.txtAtividade}>Pedro Daniel Portes RA: 2019102845</Text>
+       <Text style={styles.txtAtividade}>Calculadora</Text>
+
+       <Text style={styles.input}>{operacao}</Text>     
+
+       <View style={styles.botoes}>
         {/* OPERADORES */}
-        <Pressable onPress={()=>{setOperador('+')}} style={styles.btnOperadores}>
+        <Pressable onPress={()=>{mountOperation('+')}} style={styles.btnOperadores}>
           <Text style={styles.txtButton}>+</Text>
         </Pressable>
-        <Pressable onPress={()=>{setOperador('-')}} style={styles.btnOperadores}>
+        <Pressable onPress={()=>{mountOperation('-')}} style={styles.btnOperadores}>
           <Text style={styles.txtButton}>-</Text>
         </Pressable>
-        <Pressable onPress={()=>{setOperador('/')}} style={styles.btnOperadores}>
+        <Pressable onPress={()=>{mountOperation('/')}} style={styles.btnOperadores}>
           <Text style={styles.txtButton}>÷</Text>
         </Pressable>
-        <Pressable onPress={()=>{setOperador('*')}} style={styles.btnOperadores}>
+    
+        <Pressable onPress={()=>{mountOperation('*')}} style={styles.btnOperadores}>
           <Text style={styles.txtButton}>x</Text>
         </Pressable>
 
-        {/* ESPECIAIS */}
-        <Pressable onPress={execute} style={styles.btnEspecial}>
-          <Text style={styles.txtButton}>=</Text>
-        </Pressable>
+        {/* ESPECIAIS */}        
 
-        <Pressable onPress={clearOperation} style={styles.btnEspecial}>
+        <Pressable onPress={()=>clearOperation()} style={styles.btnEspecial}>
           <Text style={styles.txtButton}>C</Text>
         </Pressable>
 
-        <Pressable onPress={this.addTxtLista} style={styles.btnEspecial}>
-          <Text style={styles.txtButton}>,</Text>
-        </Pressable>
-
         {/* NUMEROS */}
-        <Pressable onPress={mountOperation(0)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>0</Text>
-        </Pressable>
+      
+          {
+            numeros.reverse().map(num=>
+              <Pressable key={num} onPress={()=>mountOperation(num)} style={styles.btnNumeros}>
+                <Text style={styles.txtButton}>{num}</Text>
+              </Pressable>
+            )
+          } 
 
-        <Pressable onPress={mountOperation(1)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>1</Text>
-        </Pressable>
+          {/* VIRGULA */}
+          <Pressable onPress={()=> mountOperation(',')} style={styles.btnEspecial}>
+            <Text style={styles.txtButton}>,</Text>
+          </Pressable>
 
-        <Pressable onPress={mountOperation(2)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>2</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(3)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>3</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(4)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>4</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(5)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>5</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(6)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>6</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(7)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>7</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(8)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>8</Text>
-        </Pressable>
-
-        <Pressable onPress={mountOperation(9)} style={styles.btnNumeros}>
-          <Text style={styles.txtButton}>9</Text>
-        </Pressable>
-
-      <StatusBar style="auto" />
+          {/* IGUAL */}
+          <Pressable onPress={()=>execute()} style={styles.btnEspecial}>
+            <Text style={styles.txtButton}>=</Text>
+          </Pressable>
+          <StatusBar style="auto" />
+      </View>
+       
+       
     </View>
   );
-}
+  }
 
 const styles = StyleSheet.create({
   container: {
@@ -130,39 +168,48 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  txtAtividade: {
+    marginTop:50,
+    width:'100%',
+    fontWeight: 'bold',
+    fontSize: 20,
+    textAlign:'center',
+    padding: 10,
+  },
   txtButton:{
-    color:'white'
+    color:'white',
+    fontSize:20
+  },
+  botoes:{
+    flexDirection: 'row',
+    flexWrap:'wrap',
+    width:'80%'
   },
   btnOperadores:{
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
+    justifyContent: 'center',    
+    width: 60,
+    height:60,
     backgroundColor: 'black',
   },
   btnNumeros:{
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
     backgroundColor: 'orange',
+    width: 60,
+    height:60,
   },
   btnEspecial:{
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 32,
-    borderRadius: 4,
-    elevation: 3,
+    width: 60,
+    height:60,
     backgroundColor: 'red',
   },
   input: {
-    flexDirection:'row',
-    flexWrap:'wrap',
     marginTop:10,
     height: 40,
-    width: 200,
+    width: '80%',
     margin: 12,
     borderWidth: 1,
     padding: 10,
