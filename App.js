@@ -5,16 +5,15 @@ import { StyleSheet, Text, View, Pressable, Alert, TextInput } from 'react-nativ
 export default function App() {  
   const [operacao,setOperacao] = useState('');
   const [operacaoRealizada,setOperacaoRealizada] = useState(false);
-  const [resultado,setResultado] = useState(0);
+  const [operacaoFinal,setOperacaoFinal] = useState('');
 
   const operadores = ['/','*','-','+'];
   const numeros = [0,1,2,3,4,5,6,7,8,9];
 
-  function clearOperation(){       
-    setResultado(0);
+  function clearOperation(){     
     setOperacaoRealizada(false);
-    setOperacao([...'']);
-    console.log('limpou ' + operacao)
+    setOperacao('');
+    setOperacaoFinal('');
   }
 
   function ehNumero(str){
@@ -22,14 +21,6 @@ export default function App() {
   }
 
   function mountOperation(char){
-
-    if(operacaoRealizada){
-      let resultadoAnterior = resultado;
-      clearOperation();
-      console.log('segunda vez resultado ' + resultadoAnterior);
-      console.log('segunda vez ' + char);
-      setOperation(resultadoAnterior);
-    }
 
     if (ehNumero(char)){
       setOperation(char);
@@ -93,10 +84,9 @@ export default function App() {
 
       operacaoFormatada += ` = ${resultado}`;
 
-      setResultado(resultado);
-      setOperacao(operacaoFormatada.replace(regexGlobalPonto,','));
-
+      setOperacao(`${resultado}`);
       setOperacaoRealizada(true);
+      setOperacaoFinal(operacaoFormatada.replace(regexGlobalPonto,','));
     }
     catch(ex){
       clearOperation();
@@ -109,7 +99,8 @@ export default function App() {
 
        <Text style={styles.txtAtividade}>Pedro Daniel Portes RA: 2019102845</Text>
        <Text style={styles.txtAtividade}>Calculadora</Text>
-
+       
+       <Text style={styles.txtAtividade}>{operacaoRealizada ? operacaoFinal : ''}</Text>
        <Text style={styles.input}>{operacao}</Text>     
 
        <View style={styles.botoes}>
